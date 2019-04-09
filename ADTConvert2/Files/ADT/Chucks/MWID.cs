@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace ADTConvert2.Files.ADT.Base
+namespace ADTConvert2.Files.ADT.Chucks
 {
     public class MWID : IIFFChunk, IBinarySerializable
     {

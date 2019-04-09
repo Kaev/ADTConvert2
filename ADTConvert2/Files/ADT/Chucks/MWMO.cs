@@ -3,7 +3,7 @@ using ADTConvert2.Files.Interfaces;
 using System.Collections.Generic;
 using System.IO;
 
-namespace ADTConvert2.Files.ADT.Base
+namespace ADTConvert2.Files.ADT.Chucks
 {
     /// <summary>
     /// MWMO Chunk - Contains a list of all referenced WMO models in this ADT.

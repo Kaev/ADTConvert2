@@ -2,7 +2,7 @@
 using ADTConvert2.Files.Interfaces;
 using System.IO;
 
-namespace ADTConvert2.Files.ADT.Base
+namespace ADTConvert2.Files.ADT.Chucks
 {
     /// <summary>
     /// MHDR Chunk - Contains offsets in the file for specific chunks. WoW only takes this for parsing the ADT file.

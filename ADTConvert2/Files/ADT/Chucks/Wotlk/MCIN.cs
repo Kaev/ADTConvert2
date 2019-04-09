@@ -3,7 +3,7 @@ using ADTConvert2.Files.Interfaces;
 using System.Collections.Generic;
 using System.IO;
 
-namespace ADTConvert2.Files
+namespace ADTConvert2.Files.ADT.Chucks.Wotlk
 {
     class MCIN : IIFFChunk, IBinarySerializable
     {
