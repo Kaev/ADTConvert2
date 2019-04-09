@@ -2,32 +2,35 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace ADTConvert2.Files.ADT
+namespace ADTConvert2.Files.ADT.Base
 {
-    public class MWID : IIFFChunk, IBinarySerializable
+    /// <summary>
+    /// MMID Chunk - Contains a list of M2 model indexes.
+    /// </summary>
+    public class MMID : IIFFChunk, IBinarySerializable
     {
         /// <summary>
         /// Holds the binary chunk signature.
         /// </summary>
-        public const string Signature = "MWID";
+        public const string Signature = "MMID";
 
         /// <summary>
-        /// Gets or sets the list of indexes for models in an MWID chunk.
+        /// Gets or sets the list of indexes for models in an MMID chunk.
         /// </summary>
         public List<uint> ModelFilenameOffsets { get; set; } = new List<uint>();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MWID"/> class.
+        /// Initializes a new instance of the <see cref="MMID"/> class.
         /// </summary>
-        public MWID()
+        public MMID()
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MWID"/> class.
+        /// Initializes a new instance of the <see cref="MMID"/> class.
         /// </summary>
         /// <param name="inData">The binary data.</param>
-        public MWID(byte[] inData)
+        public MMID(byte[] inData)
         {
             LoadBinaryData(inData);
         }

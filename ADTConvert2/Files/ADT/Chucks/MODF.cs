@@ -1,9 +1,9 @@
-﻿using ADTConvert2.Files.ADT.Entry;
+﻿using ADTConvert2.Files.ADT.Entrys;
 using ADTConvert2.Files.Interfaces;
 using System.Collections.Generic;
 using System.IO;
 
-namespace ADTConvert2.Files.ADT
+namespace ADTConvert2.Files.ADT.Base
 {
     class MODF : IIFFChunk, IBinarySerializable
     {

@@ -1,36 +1,37 @@
-﻿using ADTConvert2.Files.Interfaces;
+﻿using ADTConvert2.Files.ADT.Entrys.Legion;
+using ADTConvert2.Files.Interfaces;
 using System.Collections.Generic;
 using System.IO;
 
-namespace ADTConvert2.Files.ADT
+namespace ADTConvert2.Files
 {
     /// <summary>
-    /// MMID Chunk - Contains a list of M2 model indexes.
+    /// MLMX Chunk - Contains model bounding information.
     /// </summary>
-    public class MMID : IIFFChunk, IBinarySerializable
+    public class MLMX : IIFFChunk, IBinarySerializable
     {
         /// <summary>
         /// Holds the binary chunk signature.
         /// </summary>
-        public const string Signature = "MMID";
+        public const string Signature = "MLMX";
 
         /// <summary>
-        /// Gets or sets the list of indexes for models in an MMID chunk.
+        /// Gets or sets model extents.
         /// </summary>
-        public List<uint> ModelFilenameOffsets { get; set; } = new List<uint>();
+        public List<MLMXEntry> Entries { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MMID"/> class.
+        /// Initializes a new instance of the <see cref="MLMX"/> class.
         /// </summary>
-        public MMID()
+        public MLMX()
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MMID"/> class.
+        /// Initializes a new instance of the <see cref="MLMX"/> class.
         /// </summary>
-        /// <param name="inData">The binary data.</param>
-        public MMID(byte[] inData)
+        /// <param name="inData">ExtendedData.</param>
+        public MLMX(byte[] inData)
         {
             LoadBinaryData(inData);
         }
@@ -41,10 +42,11 @@ namespace ADTConvert2.Files.ADT
             using (var ms = new MemoryStream(inData))
             using (var br = new BinaryReader(ms))
             {
-                var offsetCount = inData.Length / 4;
-                for (var i = 0; i < offsetCount; ++i)
+                var entryCount = br.BaseStream.Length / MLMXEntry.GetSize();
+
+                for (var i = 0; i < entryCount; ++i)
                 {
-                    ModelFilenameOffsets.Add(br.ReadUInt32());
+                    Entries.Add(new MLMXEntry(br.ReadBytes(MLMXEntry.GetSize())));
                 }
             }
         }
@@ -67,9 +69,9 @@ namespace ADTConvert2.Files.ADT
             using (var ms = new MemoryStream())
             using (var bw = new BinaryWriter(ms))
             {
-                foreach (uint modelFilenameOffset in ModelFilenameOffsets)
+                foreach (MLMXEntry entry in Entries)
                 {
-                    bw.Write(modelFilenameOffset);
+                    ms.Write(entry.Serialize());
                 }
 
                 return ms.ToArray();

@@ -2,7 +2,7 @@
 using SharpDX;
 using System.IO;
 
-namespace ADTConvert2.Files.Legion.Entry
+namespace ADTConvert2.Files.ADT.Entrys.Legion
 {
     /// <summary>
     /// An entry struct containing information about model bounding.

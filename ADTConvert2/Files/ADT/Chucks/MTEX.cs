@@ -3,7 +3,7 @@ using ADTConvert2.Files.Interfaces;
 using System.Collections.Generic;
 using System.IO;
 
-namespace ADTConvert2.Files.ADT
+namespace ADTConvert2.Files.ADT.Base
 {
     /// <summary>
     /// MTEX Chunk - Contains a list of all referenced textures in this ADT.

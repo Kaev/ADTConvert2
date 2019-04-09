@@ -1,37 +1,35 @@
 ﻿using ADTConvert2.Files.Interfaces;
-using ADTConvert2.Files.Legion.Entry;
-using System.Collections.Generic;
 using System.IO;
 
-namespace ADTConvert2.Files
+namespace ADTConvert2.Files.ADT.Base
 {
     /// <summary>
-    /// MLMX Chunk - Contains model bounding information.
+    /// MVER Chunk - Contains the ADT version.
     /// </summary>
-    public class MLMX : IIFFChunk, IBinarySerializable
+    public class MVER : IIFFChunk, IBinarySerializable
     {
         /// <summary>
         /// Holds the binary chunk signature.
         /// </summary>
-        public const string Signature = "MLMX";
+        public const string Signature = "MVER";
 
         /// <summary>
-        /// Gets or sets model extents.
+        /// Gets or sets the ADT version.
         /// </summary>
-        public List<MLMXEntry> Entries { get; set; }
+        public uint Version { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MLMX"/> class.
+        /// Initializes a new instance of the <see cref="MVER"/> class.
         /// </summary>
-        public MLMX()
+        public MVER()
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MLMX"/> class.
+        /// Initializes a new instance of the <see cref="MVER"/> class.
         /// </summary>
         /// <param name="inData">ExtendedData.</param>
-        public MLMX(byte[] inData)
+        public MVER(byte[] inData)
         {
             LoadBinaryData(inData);
         }
@@ -42,12 +40,7 @@ namespace ADTConvert2.Files
             using (var ms = new MemoryStream(inData))
             using (var br = new BinaryReader(ms))
             {
-                var entryCount = br.BaseStream.Length / MLMXEntry.GetSize();
-
-                for (var i = 0; i < entryCount; ++i)
-                {
-                    Entries.Add(new MLMXEntry(br.ReadBytes(MLMXEntry.GetSize())));
-                }
+                Version = br.ReadUInt32();
             }
         }
 
@@ -69,10 +62,7 @@ namespace ADTConvert2.Files
             using (var ms = new MemoryStream())
             using (var bw = new BinaryWriter(ms))
             {
-                foreach (MLMXEntry entry in Entries)
-                {
-                    ms.Write(entry.Serialize());
-                }
+                bw.Write(Version);
 
                 return ms.ToArray();
             }

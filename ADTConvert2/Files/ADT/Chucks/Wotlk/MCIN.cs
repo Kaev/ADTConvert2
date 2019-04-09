@@ -1,28 +1,33 @@
-﻿using ADTConvert2.Files.ADT.Entry;
+﻿using ADTConvert2.Files.ADT.Entrys.Wotlk;
 using ADTConvert2.Files.Interfaces;
 using System.Collections.Generic;
 using System.IO;
 
-namespace ADTConvert2.Files.ADT
+namespace ADTConvert2.Files
 {
-    class MDDF : IIFFChunk, IBinarySerializable
+    class MCIN : IIFFChunk, IBinarySerializable
     {
-        public const string Signature = "MDDF";
+        public const string Signature = "MCIN";
 
         /// <summary>
-        /// Gets or sets <see cref="MDDFEntry"/>s.
+        /// Gets or sets <see cref="MCNK"/> pointers.
+        /// <para>Should always be 256.</para>
         /// </summary>
-        public List<MDDFEntry> MDDFEntrys { get; set; }
+        List<MCINEntry> Entries { get; set; }
 
-        public MDDF()
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MCIN"/> class.
+        /// </summary>
+        public MCIN()
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MDDF"/> class.
+        /// Initializes a new instance of the <see cref="MCIN"/> class.
         /// </summary>
-        /// <param name="inData">The binary data.</param>
-        public MDDF(byte[] inData)
+        /// <param name="inData">ExtendedData.</param>
+        public MCIN(byte[] inData)
         {
             LoadBinaryData(inData);
         }
@@ -45,11 +50,11 @@ namespace ADTConvert2.Files.ADT
             using (var ms = new MemoryStream(inData))
             using (var br = new BinaryReader(ms))
             {
-                var doodadCount = br.BaseStream.Length / MDDFEntry.GetSize();
+                var entryCount = br.BaseStream.Length / MCINEntry.GetSize();
 
-                for (var i = 0; i < doodadCount; ++i)
+                for (var i = 0; i < entryCount; ++i)
                 {
-                    MDDFEntrys.Add(new MDDFEntry(br.ReadBytes(MDDFEntry.GetSize())));
+                    Entries.Add(new MCINEntry(br.ReadBytes(MCINEntry.GetSize())));
                 }
             }
         }
@@ -60,9 +65,9 @@ namespace ADTConvert2.Files.ADT
             using (var ms = new MemoryStream())
             using (var bw = new BinaryWriter(ms))
             {
-                foreach (MDDFEntry doodad in MDDFEntrys)
+                foreach (MCINEntry entry in Entries)
                 {
-                    bw.Write(doodad.Serialize());
+                    ms.Write(entry.Serialize());
                 }
 
                 return ms.ToArray();

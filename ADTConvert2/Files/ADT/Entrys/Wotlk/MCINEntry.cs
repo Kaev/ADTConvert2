@@ -1,10 +1,6 @@
-﻿using ADTConvert2.Files.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using System.IO;
 
-namespace ADTConvert2.Files.Wotlk.Entry
+namespace ADTConvert2.Files.ADT.Entrys.Wotlk
 {
     /// <summary>
     /// Pointers to MCNK chunks and their sizes.

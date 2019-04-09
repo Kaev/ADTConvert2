@@ -1,18 +1,19 @@
 ﻿using ADTConvert2.Extensions;
 using ADTConvert2.Files.Interfaces;
-using System;
 using System.Collections.Generic;
-using System.Text;
 using System.IO;
 
-namespace ADTConvert2.Files.ADT
+namespace ADTConvert2.Files.ADT.Base
 {
     /// <summary>
-    /// MWMO Chunk - Contains a list of all referenced WMO models in this ADT.
+    /// MMDX Chunk - Contains a list of all referenced M2 models in this ADT.
     /// </summary>
-    class MWMO : IIFFChunk, IBinarySerializable
+    public class MMDX : IIFFChunk, IBinarySerializable
     {
-        public const string Signature = "MWMO";
+        /// <summary>
+        /// Holds the binary chunk signature.
+        /// </summary>
+        public const string Signature = "MMDX";
 
         /// <summary>
         /// Gets or sets a list of full paths to the M2 models referenced in this ADT.
@@ -20,20 +21,29 @@ namespace ADTConvert2.Files.ADT
         public List<string> Filenames { get; set; } = new List<string>();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MWMO"/> class.
+        /// Initializes a new instance of the <see cref="MMDX"/> class.
         /// </summary>
-        public MWMO()
+        public MMDX()
         {
-
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MWMO"/> class.
+        /// Initializes a new instance of the <see cref="MMDX"/> class.
         /// </summary>
         /// <param name="inData">ExtendedData.</param>
-        public MWMO(byte[] inData)
+        public MMDX(byte[] inData)
         {
             LoadBinaryData(inData);
+        }
+
+        /// <inheritdoc/>
+        public void LoadBinaryData(byte[] inData)
+        {
+            using (var ms = new MemoryStream(inData))
+            using (var br = new BinaryReader(ms))
+            {
+                Filenames.Add(br.ReadNullTerminatedString());
+            }
         }
 
         /// <inheritdoc/>
@@ -46,16 +56,6 @@ namespace ADTConvert2.Files.ADT
         public uint GetSize()
         {
             return (uint)Serialize().Length;
-        }
-
-        /// <inheritdoc/>
-        public void LoadBinaryData(byte[] inData)
-        {
-            using (var ms = new MemoryStream(inData))
-            using (var br = new BinaryReader(ms))
-            {
-                Filenames.Add(br.ReadNullTerminatedString());
-            }
         }
 
         /// <inheritdoc/>
