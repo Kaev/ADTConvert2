@@ -3,7 +3,7 @@ using ADTConvert2.Files.Interfaces;
 using System.Collections.Generic;
 using System.IO;
 
-namespace ADTConvert2.Files.ADT.Chucks.Legion
+namespace ADTConvert2.Files.ADT.Chunks.Legion
 {
     /// <summary>
     /// MLDX Chunk - Contains model bounding information.
