@@ -4,6 +4,7 @@ using System.IO;
 using SharpDX;
 using System.Text;
 using ADTConvert2.Files.Structures;
+using System.Collections.Generic;
 
 namespace ADTConvert2.Extensions
 {
@@ -97,6 +98,30 @@ namespace ADTConvert2.Extensions
         }
 
         /// <summary>
+        /// Reads an 18-byte <see cref="ShortPlane"/> from the data stream.
+        /// </summary>
+        /// <returns>The plane.</returns>
+        /// <param name="binaryReader">The reader.</param>
+        public static ShortPlane ReadShortPlane(this BinaryReader binaryReader)
+        {
+            ShortPlane shortPlane;
+            shortPlane.Coordinates = new List<List<short>>();
+
+            for (var y = 0; y < 3; ++y)
+            {
+                var coordinateRow = new List<short>();
+                for (var x = 0; x < 3; ++x)
+                {
+                    coordinateRow.Add(binaryReader.ReadInt16());
+                }
+
+                shortPlane.Coordinates.Add(coordinateRow);
+            }
+
+            return shortPlane;
+        }
+
+        /// <summary>
         /// Reads a 4-byte RIFF chunk signature from the data stream.
         /// </summary>
         /// <param name="binaryReader">The reader.</param>
@@ -124,11 +149,17 @@ namespace ADTConvert2.Extensions
         /// <returns>The chunk.</returns>
         public static T ReadIFFChunk<T>(this BinaryReader reader) where T : IIFFChunk, new()
         {
+            T chunk = new T();
+
+            if (!reader.SeekChunk(chunk.GetSignature()))
+            {
+                throw new Exception($"Chuck \"{chunk.GetSignature()}\" not found.");
+            }
+
             string chunkSignature = reader.ReadBinarySignature();
             var chunkSize = reader.ReadUInt32();
             var chunkData = reader.ReadBytes((int)chunkSize);
 
-            var chunk = new T();
             if (chunk.GetSignature() != chunkSignature)
             {
                 throw new Exception($"An unknown chunk with the signature \"{chunkSignature}\" was read.");
@@ -187,6 +218,45 @@ namespace ADTConvert2.Extensions
         }
 
         /// <summary>
+        /// Writes a 12-byte <see cref="Rotator"/> value to the data stream in Pitch/Yaw/Roll order.
+        /// </summary>
+        /// <param name="binaryWriter">The current <see cref="BinaryWriter"/> object.</param>
+        /// <param name="inRotator">Rotator.</param>
+        public static void WriteRotator(this BinaryWriter binaryWriter, Rotator inRotator)
+        {
+            binaryWriter.Write(inRotator.Pitch);
+            binaryWriter.Write(inRotator.Yaw);
+            binaryWriter.Write(inRotator.Roll);
+        }
+
+        /// <summary>
+        /// Writes a 24-byte <see cref="BoundingBox"/> to the data stream.
+        /// </summary>
+        /// <param name="binaryWriter">The current <see cref="BinaryWriter"/> object.</param>
+        /// <param name="box">In box.</param>
+        public static void WriteBoundingBox(this BinaryWriter binaryWriter, BoundingBox box)
+        {
+            binaryWriter.WriteVector3(box.Minimum);
+            binaryWriter.WriteVector3(box.Maximum);
+        }
+
+        /// <summary>
+        /// Writes an 18-byte <see cref="ShortPlane"/> to the data stream.
+        /// </summary>
+        /// <param name="binaryWriter">The current <see cref="BinaryWriter"/> object.</param>
+        /// <param name="shortPlane">The plane to write.</param>
+        public static void WriteShortPlane(this BinaryWriter binaryWriter, ShortPlane shortPlane)
+        {
+            for (var y = 0; y < 3; ++y)
+            {
+                for (var x = 0; x < 3; ++x)
+                {
+                    binaryWriter.Write(shortPlane.Coordinates[y][x]);
+                }
+            }
+        }
+
+        /// <summary>
         /// Writes an RIFF-style chunk to the data stream.
         /// </summary>
         /// <typeparam name="T">The chunk type.</typeparam>
@@ -235,29 +305,39 @@ namespace ADTConvert2.Extensions
                     throw new ArgumentOutOfRangeException(nameof(storeAs), storeAs, null);
             }
         }
-
-        /// <summary>
-        /// Writes a 12-byte <see cref="Rotator"/> value to the data stream in Pitch/Yaw/Roll order.
-        /// </summary>
-        /// <param name="binaryWriter">The current <see cref="BinaryWriter"/> object.</param>
-        /// <param name="inRotator">Rotator.</param>
-        public static void WriteRotator(this BinaryWriter binaryWriter, Rotator inRotator)
-        {
-            binaryWriter.Write(inRotator.Pitch);
-            binaryWriter.Write(inRotator.Yaw);
-            binaryWriter.Write(inRotator.Roll);
-        }
-
-        /// <summary>
-        /// Writes a 24-byte <see cref="BoundingBox"/> to the data stream.
-        /// </summary>
-        /// <param name="binaryWriter">The current <see cref="BinaryWriter"/> object.</param>
-        /// <param name="box">In box.</param>
-        public static void WriteBoundingBox(this BinaryWriter binaryWriter, BoundingBox box)
-        {
-            binaryWriter.WriteVector3(box.Minimum);
-            binaryWriter.WriteVector3(box.Maximum);
-        }
         #endregion
+
+        /// <summary>
+        /// Try to seek to given chunkSignature
+        /// </summary>
+        /// <param name="binaryReader">The reader.</param>
+        /// <param name="chunkSignature">.</param>
+        /// <param name="fromBegin">The reader.</param>
+        /// <returns>The signature as a string.</returns>
+        public static bool SeekChunk(this BinaryReader reader, string chunkSignature, bool fromBegin = true)
+        {
+            if (fromBegin)
+                reader.BaseStream.Seek(0, SeekOrigin.Begin);
+
+            try
+            {
+                var foundChuckSignature = reader.ReadBinarySignature();
+                while (foundChuckSignature != chunkSignature)
+                {
+                    var size = reader.ReadInt32();
+                    reader.BaseStream.Position += size;
+                    foundChuckSignature = reader.ReadBinarySignature();
+                }
+
+                if (foundChuckSignature == chunkSignature)
+                {
+                    reader.BaseStream.Position -= sizeof(uint);
+                    return true;
+                }
+            }
+            catch (EndOfStreamException) { }
+
+            return false;
+        }
     }
 }
