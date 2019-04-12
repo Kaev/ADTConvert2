@@ -1,4 +1,5 @@
 ﻿using ADTConvert2.Attribute;
+using ADTConvert2.Exceptions;
 using ADTConvert2.Extensions;
 using ADTConvert2.Files.ADT.Chunks;
 using ADTConvert2.Files.Interfaces;
@@ -16,14 +17,14 @@ namespace ADTConvert2.Files.ADT.Terrain
         /// <summary>
         /// Gets or sets the contains the ADT version.
         /// </summary>
-        [Order(1)]
+        [ChunkOrder(1)]
         public MVER Version { get; set; }
 
         /// <summary>
         /// Gets or sets the contains the ADT Header with offsets. The header has offsets to the other chunks in the
         /// ADT.
         /// </summary>
-        [Order(2)]
+        [ChunkOrder(2)]
         public MHDR Header { get; set; }
 
         /// <summary>
@@ -35,7 +36,7 @@ namespace ADTConvert2.Files.ADT.Terrain
         /// Gets or sets the contains the ADT bounding box
         /// ADT.
         /// </summary>
-        [Order(99)]
+        [ChunkOrder(99), ChunkOptional]
         public MFBO BoundingBox { get; set; }
 
         /// <summary>
@@ -59,17 +60,30 @@ namespace ADTConvert2.Files.ADT.Terrain
             {
                 var terrainChunkProperties = GetType()
                     .GetProperties()
-                    .OrderBy(p => ((OrderAttribute)p.GetCustomAttributes(typeof(OrderAttribute), false).Single()).Order);
+                    .OrderBy(p => ((ChunkOrderAttribute)p.GetCustomAttributes(typeof(ChunkOrderAttribute), false).Single()).Order);
 
                 foreach (PropertyInfo chunkPropertie in terrainChunkProperties)
                 {
-                    IIFFChunk chunk = (IIFFChunk)br
+                    try
+                    {
+                        IIFFChunk chunk = (IIFFChunk)br
                         .GetType()
                         .GetExtensionMethod(Assembly.GetExecutingAssembly(), "ReadIFFChunk")
                         .MakeGenericMethod(chunkPropertie.PropertyType)
                         .Invoke(null, new[] { br });
 
-                    chunkPropertie.SetValue(this, chunk);
+                        chunkPropertie.SetValue(this, chunk);
+                    }
+                    catch (TargetInvocationException ex)
+                    {
+                        bool chuckIsOptional = ((ChunkOptionalAttribute)chunkPropertie.GetCustomAttribute(typeof(ChunkOptionalAttribute), false)).Optional;
+
+                        // If chunk is not optional throw the exception
+                        if (ex.InnerException.GetType() != typeof(ChunkSignatureNotFoundException) || !chuckIsOptional)
+                        {
+                            throw ex.InnerException;
+                        }
+                    }
                 }
             }
         }
@@ -94,15 +108,21 @@ namespace ADTConvert2.Files.ADT.Terrain
             {
                 var terrainChunkProperties = GetType()
                     .GetProperties()
-                    .OrderBy(p => ((OrderAttribute)p.GetCustomAttributes(typeof(OrderAttribute), false).Single()).Order);
+                    .OrderBy(p => ((ChunkOrderAttribute)p.GetCustomAttributes(typeof(ChunkOrderAttribute), false).Single()).Order);
 
                 foreach (PropertyInfo chunkPropertie in terrainChunkProperties)
                 {
-                    bw
+                    IIFFChunk chunk = (IIFFChunk)chunkPropertie.GetValue(this);
+
+                    if (chunk != null)
+                    {
+                        bw
                         .GetType()
                         .GetExtensionMethod(Assembly.GetExecutingAssembly(), "WriteIFFChunk")
                         .MakeGenericMethod(chunkPropertie.PropertyType)
                         .Invoke(null, new[] { bw, chunkPropertie.GetValue(this) });
+                    }
+
                 }
 
                 return ms.ToArray();

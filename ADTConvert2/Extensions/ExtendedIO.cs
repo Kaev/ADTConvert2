@@ -5,6 +5,7 @@ using SharpDX;
 using System.Text;
 using ADTConvert2.Files.Structures;
 using System.Collections.Generic;
+using ADTConvert2.Exceptions;
 
 namespace ADTConvert2.Extensions
 {
@@ -153,7 +154,7 @@ namespace ADTConvert2.Extensions
 
             if (!reader.SeekChunk(chunk.GetSignature()))
             {
-                throw new Exception($"Chuck \"{chunk.GetSignature()}\" not found.");
+                throw new ChunkSignatureNotFoundException($"Chuck \"{chunk.GetSignature()}\" not found.");
             }
 
             string chunkSignature = reader.ReadBinarySignature();
@@ -162,7 +163,7 @@ namespace ADTConvert2.Extensions
 
             if (chunk.GetSignature() != chunkSignature)
             {
-                throw new Exception($"An unknown chunk with the signature \"{chunkSignature}\" was read.");
+                throw new InvalidChunkSignatureException($"An unknown chunk with the signature \"{chunkSignature}\" was read.");
             }
 
             chunk.LoadBinaryData(chunkData);
