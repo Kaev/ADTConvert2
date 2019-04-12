@@ -7,7 +7,7 @@ namespace ADTConvert2.Files.ADT.Chunks
     /// <summary>
     /// MHDR Chunk - Contains offsets in the file for specific chunks. WoW only takes this for parsing the ADT file.
     /// </summary>
-    public class TerrainHeader : IIFFChunk
+    public class MHDR : IIFFChunk
     {
         /// <summary>
         /// Holds the binary chunk signature.
@@ -112,7 +112,7 @@ namespace ADTConvert2.Files.ADT.Chunks
         /// <summary>
         /// Initializes a new instance of the <see cref="MHDR"/> class.
         /// </summary>
-        public TerrainHeader()
+        public MHDR()
         {
         }
 
@@ -120,7 +120,7 @@ namespace ADTConvert2.Files.ADT.Chunks
         /// Initializes a new instance of the <see cref="MHDR"/> class.
         /// </summary>
         /// <param name="inData">ExtendedData.</param>
-        public TerrainHeader(byte[] inData)
+        public MHDR(byte[] inData)
         {
             LoadBinaryData(inData);
         }

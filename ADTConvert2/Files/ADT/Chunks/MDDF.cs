@@ -5,14 +5,14 @@ using System.IO;
 
 namespace ADTConvert2.Files.ADT.Chunks
 {
-    class MDDF : IIFFChunk, IBinarySerializable
+    public class MDDF : IIFFChunk, IBinarySerializable
     {
         public const string Signature = "MDDF";
 
         /// <summary>
         /// Gets or sets <see cref="MDDFEntry"/>s.
         /// </summary>
-        public List<MDDFEntry> MDDFEntrys { get; set; }
+        public List<MDDFEntry> MDDFEntrys { get; set; } = new List<MDDFEntry>();
 
         public MDDF()
         {

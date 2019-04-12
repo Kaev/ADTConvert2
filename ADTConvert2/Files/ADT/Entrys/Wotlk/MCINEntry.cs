@@ -5,7 +5,7 @@ namespace ADTConvert2.Files.ADT.Entrys.Wotlk
     /// <summary>
     /// Pointers to MCNK chunks and their sizes.
     /// </summary>
-    class MCINEntry
+    public class MCINEntry
     {
         /// <summary>
         /// Offset of the MCNK Chunk

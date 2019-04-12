@@ -5,7 +5,10 @@ using System.IO;
 
 namespace ADTConvert2.Files.ADT.Chunks.Wotlk
 {
-    class MCIN : IIFFChunk, IBinarySerializable
+    /// <summary>
+    /// MCIN Chunk - Contains a list of all MCNKs with associated information in the ADT file.
+    /// </summary>
+    public class MCIN : IIFFChunk, IBinarySerializable
     {
         public const string Signature = "MCIN";
 
@@ -13,7 +16,7 @@ namespace ADTConvert2.Files.ADT.Chunks.Wotlk
         /// Gets or sets <see cref="MCNK"/> pointers.
         /// <para>Should always be 256.</para>
         /// </summary>
-        List<MCINEntry> Entries { get; set; }
+        List<MCINEntry> Entries { get; set; } = new List<MCINEntry>();
 
 
         /// <summary>

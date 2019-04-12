@@ -42,7 +42,10 @@ namespace ADTConvert2.Files.ADT.Chunks
             using (var ms = new MemoryStream(inData))
             using (var br = new BinaryReader(ms))
             {
-                Filenames.Add(br.ReadNullTerminatedString());
+                while (br.BaseStream.Position != br.BaseStream.Length)
+                {
+                    Filenames.Add(br.ReadNullTerminatedString());
+                }
             }
         }
 

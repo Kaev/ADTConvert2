@@ -8,7 +8,7 @@ namespace ADTConvert2.Files.ADT.Chunks
     /// <summary>
     /// MWMO Chunk - Contains a list of all referenced WMO models in this ADT.
     /// </summary>
-    class MWMO : IIFFChunk, IBinarySerializable
+    public class MWMO : IIFFChunk, IBinarySerializable
     {
         public const string Signature = "MWMO";
 
@@ -52,7 +52,10 @@ namespace ADTConvert2.Files.ADT.Chunks
             using (var ms = new MemoryStream(inData))
             using (var br = new BinaryReader(ms))
             {
-                Filenames.Add(br.ReadNullTerminatedString());
+                while (br.BaseStream.Position != br.BaseStream.Length)
+                {
+                    Filenames.Add(br.ReadNullTerminatedString());
+                }
             }
         }
 
