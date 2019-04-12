@@ -21,26 +21,26 @@ namespace ADTConvert2.Files.ADT.Flags
         /// <summary>
         /// Unknown Flag (Legion)
         /// </summary>
-        Unknown_4 = 0x4,
+        Unknown4 = 0x4,
 
         /// <summary>
         /// Unknown Flag (Legion)
         /// </summary>
-        Unknown_8 = 0x8,
+        Unknown8 = 0x8,
 
         /// <summary>
         /// Liquied_Known 
         /// </summary>
-        Liquid_Known = 0x20,
+        LiquidKnown = 0x20,
 
         /// <summary>
         /// Flag to skip MMID and MMDX and point directly to CASC Filedata Ids for more performance (Legion)
         /// </summary>
-        Name_Id_Is_Filedata_Id = 0x40,
+        NameIdIsFiledataId = 0x40,
 
         /// <summary>
         /// Unknown Flag (Legion)
         /// </summary>
-        Unknown_100 = 0x100
+        Unknown100 = 0x100
     }
 }

@@ -16,16 +16,16 @@ namespace ADTConvert2.Files.ADT.Flags
         /// <summary>
         /// Load _lod1.WMO for use dependent on distance (WoD)
         /// </summary>
-        Use_Lod = 0x2,
+        UseLod = 0x2,
 
         /// <summary>
         /// Use scale. Otherwise scale is 1.0 (Legion)
         /// </summary>
-        Has_Scale = 0x4,
+        HasScale = 0x4,
 
         /// <summary>
-        /// Flag to skip MMID and MMDX and point directly to CASC Filedata Ids for more performance (Legion)
+        /// Flag to skip MWID and MODF and point directly to CASC Filedata Ids for more performance (Legion)
         /// </summary>
-        Name_Id_Is_Filedata_Id = 0x8,
+        NameIdIsFiledataId = 0x8,
     }
 }
