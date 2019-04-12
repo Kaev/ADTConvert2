@@ -7,7 +7,7 @@ namespace ADTConvert2.Files.ADT.Chunks
     /// <summary>
     /// MHDR Chunk - Contains offsets in the file for specific chunks. WoW only takes this for parsing the ADT file.
     /// </summary>
-    public class MHDR : IIFFChunk
+    public class MHDR : IIFFChunk, IBinarySerializable
     {
         /// <summary>
         /// Holds the binary chunk signature.
@@ -168,12 +168,18 @@ namespace ADTConvert2.Files.ADT.Chunks
         }
 
         /// <inheritdoc/>
+        public uint GetSize()
+        {
+            return (uint)Serialize().Length;
+        }
+
+        /// <inheritdoc/>
         public byte[] Serialize()
         {
             using (var ms = new MemoryStream())
             using (var bw = new BinaryWriter(ms))
             {
-                bw.Write((ushort)Flags);
+                bw.Write((uint)Flags);
 
                 bw.Write(MCINOffset);
                 bw.Write(MTEXOffset);

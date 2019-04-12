@@ -83,7 +83,7 @@ namespace ADTConvert2.Extensions
         /// <param name="binaryReader">The reader.</param>
         public static Rotator ReadRotator(this BinaryReader binaryReader)
         {
-            return new Rotator(binaryReader.ReadVector3());
+            return new Rotator(binaryReader.ReadVector3(AxisConfiguration.Native));
         }
 
         /// <summary>

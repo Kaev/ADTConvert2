@@ -6,7 +6,7 @@ namespace ADTConvert2.Files.ADT.Flags
     /// Flags for the <see cref="MHDRFlags"/>.
     /// </summary>
     [Flags]
-    public enum MHDRFlags : ushort
+    public enum MHDRFlags : uint
     {
         /// <summary>
         /// Map contains MFBO chuck
