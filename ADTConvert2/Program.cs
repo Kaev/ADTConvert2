@@ -19,6 +19,9 @@ namespace ADTConvert2
 
             var data = File.ReadAllBytes("Test.adt");
             Terrain terrain = new Terrain(data);
+
+            byte[] a = terrain.Serialize();
+            File.WriteAllBytes("New.adt", a);
         }
     }
 }

@@ -47,7 +47,11 @@ namespace ADTConvert2.Files.ADT.Terrain
             LoadBinaryData(inData);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Deserialzes the provided binary data of the object. This is the full data block which follows the data
+        /// signature and data block length.
+        /// </summary>
+        /// <param name="inData">The binary data containing the object.</param>
         public void LoadBinaryData(byte[] inData)
         {
             using (var ms = new MemoryStream(inData))
@@ -59,14 +63,49 @@ namespace ADTConvert2.Files.ADT.Terrain
 
                 foreach (PropertyInfo chunkPropertie in terrainChunkProperties)
                 {
-                    var readIFFChunkMethod = br.GetType().GetExtensionMethod(Assembly.GetExecutingAssembly(), "ReadIFFChunk");
-                    var methodCall = readIFFChunkMethod.MakeGenericMethod(chunkPropertie.PropertyType);
-                    IIFFChunk chunk = (IIFFChunk)methodCall.Invoke(null, new[] { br });
+                    IIFFChunk chunk = (IIFFChunk)br
+                        .GetType()
+                        .GetExtensionMethod(Assembly.GetExecutingAssembly(), "ReadIFFChunk")
+                        .MakeGenericMethod(chunkPropertie.PropertyType)
+                        .Invoke(null, new[] { br });
 
                     chunkPropertie.SetValue(this, chunk);
-
-                    Console.WriteLine(chunk.GetSignature());
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets the size of the data contained in this chunk.
+        /// </summary>
+        /// <returns>The size.</returns>
+        public uint GetSize()
+        {
+            return (uint)Serialize().Length;
+        }
+
+        /// <summary>
+        /// Serializes the current object into a byte array.
+        /// </summary>
+        /// <returns>The serialized object.</returns>
+        public byte[] Serialize()
+        {
+            using (var ms = new MemoryStream())
+            using (var bw = new BinaryWriter(ms))
+            {
+                var terrainChunkProperties = GetType()
+                    .GetProperties()
+                    .OrderBy(p => ((OrderAttribute)p.GetCustomAttributes(typeof(OrderAttribute), false).Single()).Order);
+
+                foreach (PropertyInfo chunkPropertie in terrainChunkProperties)
+                {
+                    bw
+                        .GetType()
+                        .GetExtensionMethod(Assembly.GetExecutingAssembly(), "WriteIFFChunk")
+                        .MakeGenericMethod(chunkPropertie.PropertyType)
+                        .Invoke(null, new[] { bw, chunkPropertie.GetValue(this) });
+                }
+
+                return ms.ToArray();
             }
         }
     }
