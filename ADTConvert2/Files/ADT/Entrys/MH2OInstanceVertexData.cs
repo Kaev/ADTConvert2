@@ -16,24 +16,23 @@ namespace ADTConvert2.Files.ADT.Entrys
         /// <summary>
         /// Initializes a new instance of the <see cref="MH2OInstanceVertexData"/> class.
         /// </summary>
-        /// <param name="data"></param>
-        public MH2OInstanceVertexData(byte[] data, MH2OInstance instance)
+        /// <param name="inData"></param>
+        /// <param name="instance"></param>
+        public MH2OInstanceVertexData(byte[] inData, MH2OInstance instance)
         {
-            using (var ms = new MemoryStream(data))
+            using (var ms = new MemoryStream(inData))
+            using (var br = new BinaryReader(ms))
             {
-                using (var br = new BinaryReader(ms))
+                if (instance.LiquidObjectOrVertexFormat != 2)
                 {
-                    if (instance.LiquidVertexFormat != 2)
-                    {
-                        for (byte z = instance.OffsetY; z < instance.Height + instance.OffsetY; z++)
-                            for (byte x = instance.OffsetX; x < instance.Width + instance.OffsetX; x++)
-                                HeightMap[z, x] = br.ReadSingle();
-                    }
-
                     for (byte z = instance.OffsetY; z < instance.Height + instance.OffsetY; z++)
                         for (byte x = instance.OffsetX; x < instance.Width + instance.OffsetX; x++)
-                            DepthMap[z, x] = br.ReadByte();
+                            HeightMap[z, x] = br.ReadSingle();
                 }
+
+                for (byte z = instance.OffsetY; z < instance.Height + instance.OffsetY; z++)
+                    for (byte x = instance.OffsetX; x < instance.Width + instance.OffsetX; x++)
+                        DepthMap[z, x] = br.ReadByte();
             }
         }
 
@@ -41,7 +40,7 @@ namespace ADTConvert2.Files.ADT.Entrys
         /// Gets the size of an entry.
         /// </summary>
         /// <returns>The size.</returns>
-        public static uint GetSize()
+        public static int GetSize()
         {
             return sizeof(float) * 64 + sizeof(byte) * 64;
         }
@@ -52,16 +51,16 @@ namespace ADTConvert2.Files.ADT.Entrys
             using (var ms = new MemoryStream())
             using (var bw = new BinaryWriter(ms))
             {
-                if (instance.LiquidVertexFormat != 2)
+                if (instance.LiquidObjectOrVertexFormat != 2)
                 {
-                    for (byte z = instance.OffsetY; z < instance.Height + instance.OffsetY; z++)
+                    for (byte y = instance.OffsetY; y < instance.Height + instance.OffsetY; y++)
                         for (byte x = instance.OffsetX; x < instance.Width + instance.OffsetX; x++)
-                            bw.Write(HeightMap[z, x]);
+                            bw.Write(HeightMap[y, x]);
                 }
 
-                for (byte z = instance.OffsetY; z < instance.Height + instance.OffsetY; z++)
+                for (byte y = instance.OffsetY; y < instance.Height + instance.OffsetY; y++)
                     for (byte x = instance.OffsetX; x < instance.Width + instance.OffsetX; x++)
-                        bw.Write(DepthMap[z, x]);
+                        bw.Write(DepthMap[y, x]);
 
                 return ms.ToArray();
             }

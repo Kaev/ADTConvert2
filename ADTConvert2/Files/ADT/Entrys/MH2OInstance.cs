@@ -11,7 +11,7 @@ namespace ADTConvert2.Files.ADT.Entrys
         /// <summary>
         /// Gets or sets the liquid vertex format.
         /// </summary>
-        public ushort LiquidVertexFormat { get; set; }
+        public ushort LiquidObjectOrVertexFormat { get; set; }
         /// <summary>
         /// Gets or sets the minimum height level.
         /// </summary>
@@ -56,40 +56,22 @@ namespace ADTConvert2.Files.ADT.Entrys
         /// <summary>
         /// Initializes a new instance of the <see cref="MH2OInstance"/> class.
         /// </summary>
-        /// <param name="data"></param>
-        public MH2OInstance(byte[] data)
+        /// <param name="inData"></param>
+        public MH2OInstance(byte[] inData)
         {
-            using (var ms = new MemoryStream(data))
+            using (var ms = new MemoryStream(inData))
+            using (var br = new BinaryReader(ms))
             {
-                using (var br = new BinaryReader(ms))
-                {
-                    LiquidTypeId = br.ReadUInt16();
-                    LiquidVertexFormat = br.ReadUInt16();
-                    MinHeightLevel = br.ReadSingle();
-                    MaxHeightLevel = br.ReadSingle();
-                    OffsetX = br.ReadByte();
-                    OffsetY = br.ReadByte();
-                    Width = br.ReadByte();
-                    Height = br.ReadByte();
-                    OffsetExistsBitmap = br.ReadUInt32();
-                    OffsetVertexData = br.ReadUInt32();
-
-                    long positionAfterInstance = br.BaseStream.Position;
-
-                    if (OffsetExistsBitmap > 0)
-                    {
-                        br.BaseStream.Position = OffsetExistsBitmap;
-                        RenderBitmapBytes = br.ReadBytes((Width * Height + 7) / 8);
-                    }
-
-                    if (OffsetVertexData > 0)
-                    {
-                        br.BaseStream.Position = OffsetVertexData;
-                        VertexData = new MH2OInstanceVertexData(br, this);
-                    }
-
-                    br.BaseStream.Position = positionAfterInstance;
-                }
+                LiquidTypeId = br.ReadUInt16();
+                LiquidObjectOrVertexFormat = br.ReadUInt16();
+                MinHeightLevel = br.ReadSingle();
+                MaxHeightLevel = br.ReadSingle();
+                OffsetX = br.ReadByte();
+                OffsetY = br.ReadByte();
+                Width = br.ReadByte();
+                Height = br.ReadByte();
+                OffsetExistsBitmap = br.ReadUInt32();
+                OffsetVertexData = br.ReadUInt32();
             }
         }
 
@@ -97,7 +79,7 @@ namespace ADTConvert2.Files.ADT.Entrys
         /// Gets the size of an entry.
         /// </summary>
         /// <returns>The size.</returns>
-        public static uint GetSize()
+        public static int GetSize()
         {
             return sizeof(ushort) * 2 + sizeof(float) * 2 + sizeof(byte) * 4 + sizeof(uint) * 2;
         }
@@ -109,21 +91,19 @@ namespace ADTConvert2.Files.ADT.Entrys
             using (var bw = new BinaryWriter(ms))
             {
                 bw.Write(LiquidTypeId);
-                // Write 2 vertex data can be ommitted - TODO: When can we omit this?
-                /*if (OffsetVertexData == 0 && LiquidTypeId != 2)
-                    writer.Write(2);
-                else*/
-                bw.Write(LiquidVertexFormat);
+                if (OffsetVertexData == 0 && LiquidTypeId != 2)
+                    bw.Write(2);
+                else
+                    bw.Write(LiquidObjectOrVertexFormat);
+                bw.Write(LiquidObjectOrVertexFormat);
                 bw.Write(MinHeightLevel);
                 bw.Write(MaxHeightLevel);
                 bw.Write(OffsetX);
                 bw.Write(OffsetY);
                 bw.Write(Width);
                 bw.Write(Height);
-                // We will write the Offset later in MH2O.Write
-                bw.Write(0);
-                // We will write the Offset later in MH2O.Write
-                bw.Write(0);
+                bw.Write(OffsetExistsBitmap);
+                bw.Write(OffsetVertexData);
                 return ms.ToArray();
             }
         }

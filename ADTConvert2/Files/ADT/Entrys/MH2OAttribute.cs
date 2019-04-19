@@ -22,16 +22,14 @@ namespace ADTConvert2.Files.ADT.Entrys
         /// <summary>
         /// Initializes a new instance of the <see cref="MH2OAttribute"/> class.
         /// </summary>
-        /// <param name="data"></param>
-        public MH2OAttribute(byte[] data)
+        /// <param name="inData"></param>
+        public MH2OAttribute(byte[] inData)
         {
-            using (var ms = new MemoryStream(data))
+            using (var ms = new MemoryStream(inData))
+            using (var br = new BinaryReader(ms))
             {
-                using (var br = new BinaryReader(ms))
-                {
-                    Fishable = br.ReadBytes(8);
-                    Deep = br.ReadBytes(8);
-                }
+                Fishable = br.ReadBytes(8);
+                Deep = br.ReadBytes(8);
             }
         }
 
@@ -39,7 +37,7 @@ namespace ADTConvert2.Files.ADT.Entrys
         /// Gets the size of an entry.
         /// </summary>
         /// <returns>The size.</returns>
-        public static uint GetSize()
+        public static int GetSize()
         {
             return sizeof(byte) * 16;
         }
@@ -50,9 +48,6 @@ namespace ADTConvert2.Files.ADT.Entrys
             using (var ms = new MemoryStream())
             using (var bw = new BinaryWriter(ms))
             {
-                if (HasOnlyZeroes)
-                    return ms.ToArray();
-
                 bw.Write(Fishable);
                 bw.Write(Deep);
 

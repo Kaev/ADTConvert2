@@ -36,24 +36,24 @@ namespace ADTConvert2.Files.ADT.Chunks
         /// <inheritdoc/>
         public uint GetSize()
         {
-            uint size = MH2OHeader.GetSize() * 256;
-            for (int i = 0; i < 256; i++)
+            int size = MH2OHeader.GetSize() * 256;
+
+            foreach (var header in MH2OHeaders)
             {
-                if (MH2OHeaders[i].LayerCount > 0)
+                if (header.Attributes != null && !header.Attributes.HasOnlyZeroes)
                     size += MH2OAttribute.GetSize();
 
-                for (int j = 0; j < MH2OHeaders[i].LayerCount; j++)
+                foreach (var instance in header.Instances)
                 {
                     size += MH2OInstance.GetSize();
 
-                    if (MH2OHeaders[i].Instances[j].OffsetExistsBitmap > 0)
-                        size += (uint)MH2OHeaders[i].Instances[j].RenderBitmapBytes.Length;
-
-                    if (MH2OHeaders[i].Instances[j].OffsetVertexData > 0)
+                    if (instance.RenderBitmapBytes.Length == (instance.Width * instance.Height + 7) / 8)
+                        size += instance.RenderBitmapBytes.Length;
+                    if (instance.VertexData != null)
                         size += MH2OInstanceVertexData.GetSize();
                 }
             }
-            return size;
+            return (uint)size;
         }
 
         /// <inheritdoc/>
@@ -63,7 +63,42 @@ namespace ADTConvert2.Files.ADT.Chunks
             using (var br = new BinaryReader(ms))
             {
                 for (int i = 0; i < 256; i++)
-                    MH2OHeaders[i] = new MH2OHeader(this);
+                    MH2OHeaders[i] = new MH2OHeader(br.ReadBytes(MH2OHeader.GetSize()));
+
+                foreach (var header in MH2OHeaders)
+                {
+                    // load MH2O header subdata
+                    if (header.LayerCount > 0)
+                    {
+                        // load MH2O instances
+                        br.BaseStream.Position = header.OffsetInstances;
+                        for (int i = 0; i < header.LayerCount; i++)
+                            header.Instances[i] = new MH2OInstance(br.ReadBytes(MH2OInstance.GetSize()));
+
+                        // load MH2O attributes
+                        if (header.OffsetAttributes > 0)
+                        {
+                            br.BaseStream.Position = header.OffsetAttributes;
+                            header.Attributes = new MH2OAttribute(br.ReadBytes(MH2OAttribute.GetSize()));
+                        }
+
+                        // load MH2O instance subdata
+                        foreach (var instance in header.Instances)
+                        {
+                            if (instance.OffsetExistsBitmap > 0)
+                            {
+                                br.BaseStream.Position = instance.OffsetExistsBitmap;
+                                instance.RenderBitmapBytes = br.ReadBytes((instance.Width * instance.Height + 7) / 8);
+                            }
+
+                            if (instance.OffsetVertexData > 0)
+                            {
+                                br.BaseStream.Position = instance.OffsetVertexData;
+                                instance.VertexData = new MH2OInstanceVertexData(br.ReadBytes(MH2OInstanceVertexData.GetSize()), instance);
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -73,67 +108,62 @@ namespace ADTConvert2.Files.ADT.Chunks
             using (var ms = new MemoryStream())
             using (var bw = new BinaryWriter(ms))
             {
-                // Write header data
-                for (int i = 0; i < 256; i++)
-                    MH2OHeaders[i].Write(bw);
+                // Write MH2O headers later when we got the offsets
+                bw.Seek(256 * MH2OHeader.GetSize(), SeekOrigin.Begin);
 
-                // Write instance data
-                for (int i = 0; i < 256; i++)
+                // Write MH2O instances later when we got the offsets
+                foreach (var header in MH2OHeaders)
                 {
-                    // We already wrote 0 for the offsets so we don't need to write anything here if LayerCount == 0
-                    if (MH2OHeaders[i].LayerCount > 0)
+                    header.LayerCount = (uint)header.Instances.Length;
+                    if (header.LayerCount > 0)
                     {
-                        MH2OHeaders[i].OffsetInstances = (uint)bw.BaseStream.Position;
-                        var positionBeforeInstances = bw.BaseStream.Position;
-                        bw.BaseStream.Position = MH2OHeaders[i].OffsetInstancesPosition;
-                        bw.Write(MH2OHeaders[i].OffsetInstances);
-                        bw.BaseStream.Position = positionBeforeInstances;
-                        for (int j = 0; j < MH2OHeaders[i].LayerCount; j++)
-                            MH2OHeaders[i].Instances[j].Write(bw);
-                    }
-                }
-
-                // Write referenced data
-                for (int i = 0; i < 256; i++)
-                {
-                    // We already wrote 0 for the offsets so we don't need to write anything here if LayerCount == 0
-                    if (MH2OHeaders[i].LayerCount > 0)
-                    {
-                        // Write header attributes data
-                        // We can omit this chunk if it only contains 0. In this case we already have 0 as an offset.
-                        if (!MH2OHeaders[i].Attributes.HasOnlyZeroes)
+                        foreach (var instance in header.Instances)
                         {
-                            MH2OHeaders[i].OffsetAttributes = (uint)bw.BaseStream.Position;
-                            MH2OHeaders[i].Attributes.Write(bw);
-                            var positionAfterCurrentAttributes = bw.BaseStream.Position;
-                            bw.BaseStream.Position = MH2OHeaders[i].OffsetAttributesPosition;
-                            bw.Write(MH2OHeaders[i].OffsetAttributes);
-                            bw.BaseStream.Position = positionAfterCurrentAttributes;
-                        }
-
-                        for (int j = 0; j < MH2OHeaders[i].LayerCount; j++)
-                        {
-                            // Write RenderBitmapBytes if the length of the array is correct
-                            if (MH2OHeaders[i].Instances[j].RenderBitmapBytes.Length == (MH2OHeaders[i].Instances[j].Width * MH2OHeaders[i].Instances[j].Height + 7) / 8)
+                            // Write MH2O instance subdata
+                            if (instance.VertexData is null)
+                                instance.OffsetVertexData = 0;
+                            else
                             {
-                                MH2OHeaders[i].Instances[j].OffsetExistsBitmap = (uint)bw.BaseStream.Position;
-                                bw.Write(MH2OHeaders[i].Instances[j].RenderBitmapBytes);
-                                var positionAfterRenderBitmapBytes = bw.BaseStream.Position;
-                                bw.BaseStream.Position = MH2OHeaders[i].Instances[j].OffsetExistsBitmapPosition;
-                                bw.Write(MH2OHeaders[i].Instances[j].OffsetExistsBitmap);
-                                bw.BaseStream.Position = positionAfterRenderBitmapBytes;
+                                instance.OffsetVertexData = (uint)bw.BaseStream.Position;
+                                bw.Write(instance.VertexData.Serialize(instance));
                             }
 
-                            // Write instance vertex data - TODO: When can we omit this?
-                            MH2OHeaders[i].Instances[j].OffsetVertexDataPosition = (uint)bw.BaseStream.Position;
-                            MH2OHeaders[i].Instances[j].VertexData.Write(bw, MH2OHeaders[i].Instances[j]);
-                            var positionAfterVertexData = bw.BaseStream.Position;
-                            bw.BaseStream.Position = MH2OHeaders[i].Instances[j].OffsetVertexDataPosition;
-                            bw.Write(MH2OHeaders[i].Instances[j].OffsetVertexDataPosition);
-                            bw.BaseStream.Position = positionAfterVertexData;
+                            if (instance.RenderBitmapBytes.Length == 0)
+                                instance.OffsetExistsBitmap = 0;
+                            // Don't write RenderBitmapBytes when the length is incorrect
+                            else if (instance.RenderBitmapBytes.Length == (instance.Width * instance.Height + 7) / 8)
+                            {
+                                instance.OffsetExistsBitmap = (uint)bw.BaseStream.Position;
+                                bw.Write(instance.RenderBitmapBytes);
+                            }
                         }
+
+                        // Write MH2O attributes
+                        if (header.Attributes is null || header.Attributes.HasOnlyZeroes)
+                            header.OffsetAttributes = 0;
+                        else
+                        {
+                            header.OffsetAttributes = (uint)bw.BaseStream.Position;
+                            bw.Write(header.Attributes.Serialize());
+                        }
+
+                        // Write MH2O instances
+                        header.OffsetInstances = (uint)bw.BaseStream.Position;
+                        foreach (var instance in header.Instances)
+                            bw.Write(instance.Serialize());
+                    }
+                    else
+                    {
+                        header.OffsetAttributes = 0;
+                        header.OffsetInstances = 0;
                     }
                 }
+
+                // Write MH2O header data
+                bw.Seek(0, SeekOrigin.Begin);
+                foreach (var header in MH2OHeaders)
+                    bw.Write(header.Serialize());
+
                 return ms.ToArray();
             }
         }
